@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pesapal RDBMS Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            text-align: center;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 0.25rem;
+            transition: background-color 0.3s;
+        }
+        
+        .button:hover {
+            background: #5a67d8;
+        }
+        
+        .button.secondary {
+            background: #48bb78;
+        }
+        
+        .button.secondary:hover {
+            background: #38a169;
+        }
+        
+        .button.danger {
+            background: #f56565;
+        }
+        
+        .button.danger:hover {
+            background: #e53e3e;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .data-table th {
+            background: #f7fafc;
+            font-weight: 600;
+            color: #2d3748;
+        }
+        
+        .data-table tr:hover {
+            background: #f7fafc;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .alert {
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+        
+        .alert.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+        
+        .alert.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #718096;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .todo-checkbox {
+            margin-right: 1rem;
+        }
+        
+        .todo-title {
+            flex: 1;
+        }
+        
+        .todo-title.completed {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+        
+        .todo-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Pesapal RDBMS Demo</h1>
+            <p class="subtitle">Custom Relational Database Management System with Django Integration</p>
+        </header>
+
+        <div id="alerts"></div>
+
+        <!-- Database Statistics -->
+        <div class="card">
+            <h2>📊 Database Statistics</h2>
+            <div class="stats-grid" id="stats-grid">
+                <div class="loading">Loading statistics...</div>
+            </div>
+            <button class="button" onclick="loadStats()">Refresh Stats</button>
+        </div>
+
+        <!-- Users Management -->
+        <div class="card">
+            <h2>👥 Users Management</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="user-name">Name:</label>
+                    <input type="text" id="user-name" placeholder="Enter user name">
+                </div>
+                <div class="form-group">
+                    <label for="user-email">Email:</label>
+                    <input type="email" id="user-email" placeholder="Enter email">
+                </div>
+                <div class="form-group">
+                    <label for="user-active">Status:</label>
+                    <select id="user-active">
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+            </div>
+            <button class="button secondary" onclick="createUser()">Create User</button>
+            <button class="button" onclick="loadUsers()">Refresh Users</button>
+            
+            <div id="users-container">
+                <div class="loading">Loading users...</div>
+            </div>
+        </div>
+
+        <!-- Todo Management -->
+        <div class="card">
+            <h2>✅ Todo Management</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="todo-user">User:</label>
+                    <select id="todo-user">
+                        <option value="">Select user...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="todo-title">Title:</label>
+                    <input type="text" id="todo-title" placeholder="Enter todo title">
+                </div>
+                <div class="form-group">
+                    <label for="todo-completed">Status:</label>
+                    <select id="todo-completed">
+                        <option value="false">Pending</option>
+                        <option value="true">Completed</option>
+                    </select>
+                </div>
+            </div>
+            <button class="button secondary" onclick="createTodo()">Create Todo</button>
+            <button class="button" onclick="loadTodos()">Refresh Todos</button>
+            
+            <div id="todos-container">
+                <div class="loading">Loading todos...</div>
+            </div>
+        </div>
+
+        <!-- JOIN Demo -->
+        <div class="card">
+            <h2>🔗 JOIN Operation Demo</h2>
+            <p>Demonstrates INNER JOIN between users and todos tables.</p>
+            <button class="button" onclick="loadJoinDemo()">Load JOIN Results</button>
+            <div id="join-container">
+                <div class="loading hidden">Loading join results...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let users = [];
+        let todos = [];
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            loadUsers();
+            loadTodos();
+        });
+
+        // Utility functions
+        function showAlert(message, type = 'success') {
+            const alertsContainer = document.getElementById('alerts');
+            const alert = document.createElement('div');
+            alert.className = `alert ${type}`;
+            alert.textContent = message;
+            alertsContainer.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+
+        function showLoading(containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '<div class="loading">Loading...</div>';
+        }
+
+        // API calls
+        async function apiCall(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Request failed');
+                }
+                
+                return data;
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+
+        // Statistics
+        async function loadStats() {
+            try {
+                const data = await apiCall('/api/stats/');
+                const stats = data.data;
+                
+                const statsGrid = document.getElementById('stats-grid');
+                statsGrid.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.table_count}</div>
+                        <div class="stat-label">Tables</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.tables.reduce((sum, table) => sum + table.row_count, 0)}</div>
+                        <div class="stat-label">Total Rows</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.tables.find(t => t.name === 'users')?.row_count || 0}</div>
+                        <div class="stat-label">Users</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.tables.find(t => t.name === 'todos')?.row_count || 0}</div>
+                        <div class="stat-label">Todos</div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+
+        // Users
+        async function loadUsers() {
+            try {
+                showLoading('users-container');
+                const data = await apiCall('/api/users/');
+                users = data.data;
+                
+                const container = document.getElementById('users-container');
+                if (users.length === 0) {
+                    container.innerHTML = '<p>No users found.</p>';
+                    return;
+                }
+                
+                let html = '<table class="data-table"><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Status</th></tr></thead><tbody>';
+                users.forEach(user => {
+                    html += `<tr>
+                        <td>${user.id}</td>
+                        <td>${user.name}</td>
+                        <td>${user.email}</td>
+                        <td>${user.active ? 'Active' : 'Inactive'}</td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                
+                container.innerHTML = html;
+                
+                // Update user select in todo form
+                const userSelect = document.getElementById('todo-user');
+                userSelect.innerHTML = '<option value="">Select user...</option>';
+                users.forEach(user => {
+                    userSelect.innerHTML += `<option value="${user.id}">${user.name}</option>`;
+                });
+                
+            } catch (error) {
+                console.error('Failed to load users:', error);
+            }
+        }
+
+        async function createUser() {
+            const name = document.getElementById('user-name').value.trim();
+            const email = document.getElementById('user-email').value.trim();
+            const active = document.getElementById('user-active').value === 'true';
+            
+            if (!name || !email) {
+                showAlert('Please fill in all fields', 'error');
+                return;
+            }
+            
+            try {
+                await apiCall('/api/users/create/', {
+                    method: 'POST',
+                    body: JSON.stringify({ name, email, active })
+                });
+                
+                showAlert('User created successfully!');
+                
+                // Clear form
+                document.getElementById('user-name').value = '';
+                document.getElementById('user-email').value = '';
+                document.getElementById('user-active').value = 'true';
+                
+                // Refresh users list
+                loadUsers();
+                loadStats();
+                
+            } catch (error) {
+                console.error('Failed to create user:', error);
+            }
+        }
+
+        // Todos
+        async function loadTodos() {
+            try {
+                showLoading('todos-container');
+                const data = await apiCall('/api/todos/');
+                todos = data.data;
+                
+                const container = document.getElementById('todos-container');
+                if (todos.length === 0) {
+                    container.innerHTML = '<p>No todos found.</p>';
+                    return;
+                }
+                
+                let html = '';
+                todos.forEach(todo => {
+                    const userName = users.find(u => u.id === todo.user_id)?.name || 'Unknown';
+                    html += `
+                        <div class="todo-item">
+                            <input type="checkbox" class="todo-checkbox" 
+                                   ${todo.completed ? 'checked' : ''} 
+                                   onchange="toggleTodo(${todo.id}, this.checked)">
+                            <span class="todo-title ${todo.completed ? 'completed' : ''}">${todo.title}</span>
+                            <small>by ${userName}</small>
+                            <div class="todo-actions">
+                                <button class="button danger" onclick="deleteTodo(${todo.id})">Delete</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Failed to load todos:', error);
+            }
+        }
+
+        async function createTodo() {
+            const userId = parseInt(document.getElementById('todo-user').value);
+            const title = document.getElementById('todo-title').value.trim();
+            const completed = document.getElementById('todo-completed').value === 'true';
+            
+            if (!userId || !title) {
+                showAlert('Please select a user and enter a title', 'error');
+                return;
+            }
+            
+            try {
+                await apiCall('/api/todos/create/', {
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        user_id: userId, 
+                        title, 
+                        completed,
+                        created_at: new Date().toISOString().split('T')[0]
+                    })
+                });
+                
+                showAlert('Todo created successfully!');
+                
+                // Clear form
+                document.getElementById('todo-user').value = '';
+                document.getElementById('todo-title').value = '';
+                document.getElementById('todo-completed').value = 'false';
+                
+                // Refresh todos list
+                loadTodos();
+                loadStats();
+                
+            } catch (error) {
+                console.error('Failed to create todo:', error);
+            }
+        }
+
+        async function toggleTodo(todoId, completed) {
+            try {
+                await apiCall(`/api/todos/${todoId}/update/`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ completed })
+                });
+                
+                loadTodos();
+                loadStats();
+                
+            } catch (error) {
+                console.error('Failed to update todo:', error);
+            }
+        }
+
+        async function deleteTodo(todoId) {
+            if (!confirm('Are you sure you want to delete this todo?')) {
+                return;
+            }
+            
+            try {
+                await apiCall(`/api/todos/${todoId}/delete/`, {
+                    method: 'DELETE'
+                });
+                
+                showAlert('Todo deleted successfully!');
+                loadTodos();
+                loadStats();
+                
+            } catch (error) {
+                console.error('Failed to delete todo:', error);
+            }
+        }
+
+        // JOIN Demo
+        async function loadJoinDemo() {
+            try {
+                showLoading('join-container');
+                const data = await apiCall('/api/join-demo/');
+                const joinedData = data.data;
+                
+                const container = document.getElementById('join-container');
+                if (joinedData.length === 0) {
+                    container.innerHTML = '<p>No joined data found.</p>';
+                    return;
+                }
+                
+                let html = '<table class="data-table"><thead><tr>';
+                const columns = Object.keys(joinedData[0]);
+                columns.forEach(col => {
+                    html += `<th>${col}</th>`;
+                });
+                html += '</tr></thead><tbody>';
+                
+                joinedData.forEach(row => {
+                    html += '<tr>';
+                    columns.forEach(col => {
+                        html += `<td>${row[col] || ''}</td>`;
+                    });
+                    html += '</tr>';
+                });
+                
+                html += '</tbody></table>';
+                container.innerHTML = html;
+                
+                showAlert(`JOIN operation returned ${joinedData.length} rows!`);
+                
+            } catch (error) {
+                console.error('Failed to load join demo:', error);
+            }
+        }
+    </script>
+</body>
+</html>
